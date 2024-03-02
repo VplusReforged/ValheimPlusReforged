@@ -83,6 +83,8 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Features\BaseWeight.cs" />
+    <Compile Include="Features\LiveSingleValueUpdaterDelegate.cs" />
+    <Compile Include="Features\MegingjordBuff.cs" />
     <Compile Include="Properties\IgnoreAccessModifiers.cs" />
     <Compile Include="Utilities\AcceptableValueMinimumRange.cs" />
     <Compile Include="Utilities\FloatingPoint.cs" />

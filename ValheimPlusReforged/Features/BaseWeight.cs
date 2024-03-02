@@ -2,57 +2,43 @@
 using BepInEx.Configuration;
 using HarmonyLib;
 using JetBrains.Annotations;
-using Jotunn;
-using Jotunn.Managers;
 using ValheimPlusReforged.Utilities;
 
 namespace ValheimPlusReforged.Features;
 
-[HarmonyPatch(typeof(Player), nameof(Player.Awake))]
-public static class BaseWeight
+internal class BaseWeight : LiveSingleValueUpdaterDelegate<Player, float>
 {
-    private static ConfigEntry<float> _configEntry;
-    private static Player _playerInstance;
+    internal BaseWeight() : base(featureName: "base weight") { }
+
+    protected override ConfigEntry<float> ConfigEntry() => ValheimPlusReforged.Config.Bind(
+        section: "Player",
+        key: "BasePlayerWeight",
+        defaultValue: 300f,
+        configDescription: new ConfigDescription(
+            description: "The base carry weight of your character. [Synced with Server]",
+            acceptableValues: new AcceptableValueMinimumRange<float>(0f),
+            tags: ValheimPlusReforged.AdminConfig
+        )
+    );
+
+    protected override void Update(Player instance, float value)
+    {
+        if (FloatingPoint.FuzzyEquals(instance.m_maxCarryWeight, value)) return;
+        Logger.LogDebug($"Updating carry weight from {instance.m_maxCarryWeight} to {value}!");
+        instance.m_maxCarryWeight = value;
+    }
+}
+
+[HarmonyPatch(typeof(Player), nameof(Player.Awake))]
+public static class BaseWeightPatch
+{
+    private static readonly LiveSingleValueUpdaterDelegate<Player, float> Delegate = new BaseWeight();
 
     [HarmonyPrepare]
     [UsedImplicitly]
-    private static void Prepare(MethodBase original)
-    {
-        if (original != null) return; // only call once
-        _configEntry = ValheimPlusReforged.Config.Bind(
-            section: "Player",
-            key: "BasePlayerWeight",
-            defaultValue: 300f,
-            configDescription: new ConfigDescription(
-                // todo only append sync info if not single player.
-                description: "The base carry weight of your character. [Synced with Server]",
-                acceptableValues: new AcceptableValueMinimumRange<float>(0f),
-                tags: ValheimPlusReforged.AdminConfig
-            )
-        );
-        SynchronizationManager.OnConfigurationWindowClosed += UpdateValue;
-        SynchronizationManager.OnConfigurationSynchronized += (_, _) => UpdateValue();
-    }
+    private static void Prepare(MethodBase original) => Delegate.Prepare(original);
 
     [HarmonyPostfix]
     [UsedImplicitly]
-    private static void Postfix(ref Player __instance)
-    {
-        Logger.LogDebug("Setting player instance");
-        _playerInstance = __instance;
-        UpdateValue();
-    }
-
-    private static void UpdateValue()
-    {
-        if (_playerInstance == null)
-        {
-            Logger.LogDebug($"Player instance not set, can't update carry weight.");
-            return;
-        }
-
-        if (FloatingPoint.FuzzyEquals(_playerInstance.m_maxCarryWeight, _configEntry.Value)) return;
-        Logger.LogDebug($"Updating carry weight from {_playerInstance.m_maxCarryWeight} to {_configEntry.Value}!");
-        _playerInstance.m_maxCarryWeight = _configEntry.Value;
-    }
+    private static void Postfix(ref Player __instance) => Delegate.UpdateInstance(ref __instance);
 }
