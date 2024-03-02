@@ -1,9 +1,8 @@
 using BepInEx;
+using BepInEx.Configuration;
 using HarmonyLib;
 using Jotunn;
-using Jotunn.Managers;
 using Jotunn.Utils;
-using ValheimPlusReforged.Patches;
 
 namespace ValheimPlusReforged;
 
@@ -16,53 +15,19 @@ public class ValheimPlusReforged : BaseUnityPlugin
     private const string PluginName = "ValheimPlusReforged";
     private const string PluginVersion = "0.0.1";
 
-    public const string HarmonyId = "mod.valheim_plus_reforged";
+    private const string HarmonyId = "mod.valheim_plus_reforged";
+    private static readonly Harmony Harmony = new(HarmonyId);
 
-    public static readonly Harmony Harmony = new(HarmonyId);
+    public static readonly ConfigurationManagerAttributes AdminConfig = new() { IsAdminOnly = true };
+    public static readonly ConfigurationManagerAttributes ClientConfig = new() { IsAdminOnly = false };
 
-    public readonly ConfigurationManagerAttributes AdminConfig = new() { IsAdminOnly = true };
-
-    private Sections _sections;
+    public new static ConfigFile Config { get; private set; }
 
     private void Awake()
     {
         Jotunn.Logger.LogInfo("Loading Valheim Plus Reforged");
-
-        _sections = new Sections(this);
-
-        foreach (var feature in _sections.Features)
-        {
-            feature.Awake();
-        }
-
-        foreach (var feature in _sections.Features)
-        {
-            feature.Update();
-        }
-
-        SynchronizationManager.OnConfigurationSynchronized += (_, attr) =>
-        {
-            Jotunn.Logger.LogDebug("Syncing Server Configs");
-            UpdateFeatures();
-        };
-
-        SynchronizationManager.OnConfigurationWindowClosed += () =>
-        {
-            Jotunn.Logger.LogDebug("Syncing Local Configs");
-            UpdateFeatures();
-        };
-
+        Config = base.Config;
+        Harmony.PatchAll();
         Jotunn.Logger.LogInfo("Valheim Plus Reforged Loaded");
-
-        // To learn more about Jotunn's features, go to
-        // https://valheim-modding.github.io/Jotunn/tutorials/overview.html
-    }
-
-    private void UpdateFeatures()
-    {
-        foreach (var feature in _sections.Features)
-        {
-            feature.Update();
-        }
     }
 }

@@ -82,9 +82,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Patches\Feature.cs" />
-    <Compile Include="Patches\Features\BaseWeight.cs" />
-    <Compile Include="Patches\Sections.cs" />
+    <Compile Include="Features\BaseWeight.cs" />
     <Compile Include="Properties\IgnoreAccessModifiers.cs" />
     <Compile Include="Utilities\AcceptableValueMinimumRange.cs" />
     <Compile Include="Utilities\FloatingPoint.cs" />
