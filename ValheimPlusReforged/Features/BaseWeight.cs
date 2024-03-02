@@ -1,4 +1,5 @@
-﻿using BepInEx.Configuration;
+﻿using System.Reflection;
+using BepInEx.Configuration;
 using HarmonyLib;
 using JetBrains.Annotations;
 using Jotunn;
@@ -15,8 +16,9 @@ public static class BaseWeight
 
     [HarmonyPrepare]
     [UsedImplicitly]
-    private static void Prepare()
+    private static void Prepare(MethodBase original)
     {
+        if (original != null) return; // only call once
         _configEntry = ValheimPlusReforged.Config.Bind(
             section: "Player",
             key: "BasePlayerWeight",
