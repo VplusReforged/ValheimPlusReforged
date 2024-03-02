@@ -1,33 +1,68 @@
 using BepInEx;
-using Jotunn.Entities;
+using HarmonyLib;
+using Jotunn;
 using Jotunn.Managers;
 using Jotunn.Utils;
+using ValheimPlusReforged.Patches;
 
-namespace ValheimPlusReforged
+namespace ValheimPlusReforged;
+
+[BepInPlugin(PluginGuid, PluginName, PluginVersion)]
+[BepInDependency(Main.ModGuid)]
+[NetworkCompatibility(CompatibilityLevel.EveryoneMustHaveMod, VersionStrictness.Minor)]
+public class ValheimPlusReforged : BaseUnityPlugin
 {
-    [BepInPlugin(PluginGuid, PluginName, PluginVersion)]
-    [BepInDependency(Jotunn.Main.ModGuid)]
-    [NetworkCompatibility(CompatibilityLevel.EveryoneMustHaveMod, VersionStrictness.Minor)]
-    internal class ValheimPlusReforged : BaseUnityPlugin
-    {
-        private const string PluginGuid = "com.VPlusReforged.ValheimPlusReforged";
-        private const string PluginName = "ValheimPlusReforged";
-        private const string PluginVersion = "0.0.1";
-        
-        // Use this class to add your own localization to the game
-        // https://valheim-modding.github.io/Jotunn/tutorials/localization.html
-        public static CustomLocalization Localization = LocalizationManager.Instance.GetLocalization();
+    private const string PluginGuid = "com.VPlusReforged.ValheimPlusReforged";
+    private const string PluginName = "ValheimPlusReforged";
+    private const string PluginVersion = "0.0.1";
 
-        private void Awake()
+    public const string HarmonyId = "mod.valheim_plus_reforged";
+
+    public static readonly Harmony Harmony = new(HarmonyId);
+
+    public readonly ConfigurationManagerAttributes AdminConfig = new() { IsAdminOnly = true };
+
+    private Sections _sections;
+
+    private void Awake()
+    {
+        Jotunn.Logger.LogInfo("Loading Valheim Plus Reforged");
+
+        _sections = new Sections(this);
+
+        foreach (var feature in _sections.Features)
         {
-            // Jotunn comes with its own Logger class to provide a consistent Log style for all mods using it
-            Jotunn.Logger.LogInfo("ValheimPlusReforged has landed");
-            
-            // To learn more about Jotunn's features, go to
-            // https://valheim-modding.github.io/Jotunn/tutorials/overview.html
+            feature.Awake();
+        }
+
+        foreach (var feature in _sections.Features)
+        {
+            feature.Update();
+        }
+
+        SynchronizationManager.OnConfigurationSynchronized += (_, attr) =>
+        {
+            Jotunn.Logger.LogDebug("Syncing Server Configs");
+            UpdateFeatures();
+        };
+
+        SynchronizationManager.OnConfigurationWindowClosed += () =>
+        {
+            Jotunn.Logger.LogDebug("Syncing Local Configs");
+            UpdateFeatures();
+        };
+
+        Jotunn.Logger.LogInfo("Valheim Plus Reforged Loaded");
+
+        // To learn more about Jotunn's features, go to
+        // https://valheim-modding.github.io/Jotunn/tutorials/overview.html
+    }
+
+    private void UpdateFeatures()
+    {
+        foreach (var feature in _sections.Features)
+        {
+            feature.Update();
         }
     }
 }
-
-
-
