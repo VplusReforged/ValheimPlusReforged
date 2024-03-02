@@ -49,7 +49,7 @@ public static class BaseWeight
             return;
         }
 
-        if (FloatingPoint.fuzzyEquals(_playerInstance.m_maxCarryWeight, _configEntry.Value)) return;
+        if (FloatingPoint.FuzzyEquals(_playerInstance.m_maxCarryWeight, _configEntry.Value)) return;
         Logger.LogDebug($"Updating carry weight from {_playerInstance.m_maxCarryWeight} to {_configEntry.Value}!");
         _playerInstance.m_maxCarryWeight = _configEntry.Value;
     }
